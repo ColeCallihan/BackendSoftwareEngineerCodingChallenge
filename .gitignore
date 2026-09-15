@@ -1,0 +1,4 @@
+# Ignore Python Environments
+.venv
+venv/
+venv.bak/

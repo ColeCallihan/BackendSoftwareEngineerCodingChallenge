@@ -1,0 +1,33 @@
+from enum import IntEnum
+
+class APIStatus(IntEnum):
+    # Informational
+    CONTINUE = 100
+    SWITCHING_PROTOCOL = 101
+    PROCESSING = 102
+    EARLY_HINTS = 103
+
+    # Successes
+    OK = 200
+    CREATED = 201
+    ACCEPTED = 202
+    NO_CONTENT = 204
+
+
+    # Redirection
+    MULTIPLE_CHOICES = 300
+    MOVED_PERMANANTLY = 301
+    FOUND = 302
+
+    # Client Error
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    NOT_FOUND = 404
+    UNSUPPORTED_MEDIA_TYPE = 415
+
+    # Server Error
+    INTERNAL_SERVER_ERROR = 500
+    NOT_IMPLEMENTED = 501
+    BAD_GATEWAY = 502
+    SERVICE_UNAVAILABLE = 503
+    GATEWAY_TIMEOUT = 504
