@@ -1,21 +1,21 @@
 ## BackendSoftwareEngineerCodingChallenge
 
 # How to Run
-First create a python virtual environment
-python -m venv venv
+First create a python virtual environment \n
+python -m venv venv 
 
-Install Flask, Pydantic and Flask-HTTPAuth
-python -m pip install flask
-python -m pip install pydantic
-python -m pip install flask
+Install Flask, Pydantic and Flask-HTTPAuth \n
+python -m pip install flask \n
+python -m pip install pydantic \n
+python -m pip install flask \n
 
-To run the flask server:
+To run the flask server: \n
 ./scripts/run.sh
 
-To run cleanly (deleting the user file and user data json files)
+To run cleanly (deleting the user file and user data json files) \n
 ./scripts/clean_run.sh
 
-To Test the client side
+To Test the client side \n
 python src/client.py
 
 # Research:
