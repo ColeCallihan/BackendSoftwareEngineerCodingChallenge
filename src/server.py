@@ -1,50 +1,70 @@
 # server.py
 from flask import Flask, request, jsonify
+from flask_httpauth import HTTPTokenAuth
+from pathlib import Path
 
 app: Flask = Flask(__name__)
 
-countries: dict = [
-    {"id": 1, "name": "Thailand", "capital": "Bangkok", "area": 513120},
-    {"id": 2, "name": "Australia", "capital": "Canberra", "area": 7617930},
-    {"id": 3, "name": "Egypt", "capital": "Cairo", "area": 1010408},
-]
+# Would Make environment Variable
+data_path: Path = Path("data/")
 
-def _find_next_id():
-    return max(country["id"] for country in countries) + 1
+# Determine if user data already exists, if not, create it
+users_file: Path = data_path / "user_data.txt"
 
-@app.get("/countries")
-def get_countries():
-    return jsonify(countries)
+try:
+    #using "with open" ensures file safety
+    with open(users_file, "x") as file:
+        pass
+except FileExistsError:
+    print("User File already exists")
 
-@app.post("/countries")
-def add_country():
-    if request.is_json:
-        country = request.get_json()
-        country["id"] = _find_next_id()
-        countries.append(country)
-        return country, 201
-    return {"error": "Request must be JSON"}, 415
+# countries: dict = [
+#     {"id": 1, "name": "Thailand", "capital": "Bangkok", "area": 513120},
+#     {"id": 2, "name": "Australia", "capital": "Canberra", "area": 7617930},
+#     {"id": 3, "name": "Egypt", "capital": "Cairo", "area": 1010408},
+# ]
 
-# Look into Flask-HTTPAuth
-'''
-# Specifying 'Bearer' as the header scheme (it defaults to 'Bearer')
 auth = HTTPTokenAuth(scheme='Bearer')
 
-# Mock database/store of tokens mapped to users
-tokens = {
+user_tokens = {
     "secret-token-123": "john_doe",
     "super-secret-456": "jane_smith"
 }
+
 @auth.verify_token
 def verify_token(token):
-    # This callback automatically receives the extracted token from the header
-    if token in tokens:
-        return tokens[token] # Returns the user identity if valid
+    # This callback function lets Flask automatically receives the extracted token from the header
+    if token in user_tokens:
+        return user_tokens[token] # Returns the user identity if valid
     return None
 
-@app.route('/api/protected', methods=['GET'])
-@auth.login_required
-def protected_route():
-    current_user = auth.current_user()
-    return jsonify({"message": f"Hello {current_user}, access granted!"})
-'''
+# Private methods
+# def _find_next_id() -> int:
+#     return max(country["id"] for country in countries) + 1
+
+# API Endpoints
+# @app.get("/countries")
+# def get_countries():
+#     return jsonify(countries)
+
+# @app.post("/countries")
+# @auth.login_required
+# def add_country():
+#     if request.is_json:
+#         country = request.get_json()
+#         country["id"] = _find_next_id()
+#         countries.append(country)
+#         return country, 201
+#     return {"error": "Request must be JSON"}, 415
+
+#-SignUp
+@app.post("/signup")
+def sign_up():
+    if request.is_json:
+        user_profile = request.get_json()
+        username = user_profile["username"]
+        teamname = user_profile["teamname"]
+#-GetUsers
+#-SaveMyNotes (destructive save, will create if empty) (Create | Update)
+#-GetMyNotes (Read)
+#-DeleteMyNotes (Delete)
