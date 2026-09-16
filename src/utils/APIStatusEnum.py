@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-class APIStatus(IntEnum):
+class APIStatusEnum(IntEnum):
     # Informational
     CONTINUE = 100
     SWITCHING_PROTOCOL = 101

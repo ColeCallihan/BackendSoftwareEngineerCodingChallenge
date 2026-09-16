@@ -85,7 +85,7 @@ def _save_a_user(username: str, teamname: str) -> User:
         file.write(f"|{new_user.model_dump_json()}")
     return new_user
 
-def _save_note(note: str, user_team:str) -> bool:
+def _save_note(note: str, user_team:str):
     # first, read in user data
     user_data_dict: dict
 
@@ -101,7 +101,6 @@ def _save_note(note: str, user_team:str) -> bool:
     # save dict back to file
     with open(data_file, "w") as file:
         json.dump(user_data_dict, file, indent=4)
-    return True
 
 def _get_notes(user_team: str) -> list[str] | None:
     # first, read in user data
@@ -114,6 +113,55 @@ def _get_notes(user_team: str) -> list[str] | None:
     if user_team in user_data_dict:
         return user_data_dict[user_team]
     # if not, return nothing
+
+def _delete_notes(user_team: str) -> bool:
+    # first, read in user data
+    user_data_dict: dict
+
+    with open(data_file, "r") as file:
+        user_data_dict = json.load(file)
+
+    # Guard Clause: See if user exists
+    if user_team not in user_data_dict:
+        return False
+
+    user_data_dict.pop(user_team, None)
+
+    # Write the json file without the user_team's notes
+    with open(data_file, "w") as file:
+        json.dump(user_data_dict, file, indent=4)
+
+    return True
+
+def _delete_user(username: str, teamname: str) -> bool:
+    # First, get all users
+    user_list: list[User] = _get_user_list()
+
+    # User to delete
+    deleting_user: User = User(id=0, username=username, teamname=teamname, token="xxxxxx")
+
+    try:
+        found_index: int = user_list.index(deleting_user)
+
+        # If found, delete from list
+        user_list.pop(found_index)
+
+        # rewrite to users file
+        write_string: str = ""
+
+        for user in user_list:
+            write_string += f"{user.model_dump_json()}|"
+
+        # remove trailing pipe |
+        # Strings are immutable, so this is creating an entire copy, not very performant
+        write_string = write_string[:-1]
+
+        # overwrite current users file
+        with open(users_file, "w") as file:
+            file.write(write_string)
+        return True
+    except ValueError():
+        return False
 
 #-SignUp
 @app.post("/signup")
@@ -144,10 +192,8 @@ def save_notes():
         username = payload["username"]
         teamname = payload["teamname"]
         note: str = payload["notes"]
-        if _save_note(note, username + teamname):
-            return jsonify(note), 201
-        else:
-            return {"Message": "Unable to save note"}, 200
+        _save_note(note, username + teamname)
+        return jsonify(note), 201
     else:
         return {"error": "Request must be JSON"}, 415
 
@@ -168,4 +214,31 @@ def read_notes():
         return {"error": "Request must be JSON"}, 415
 
 #-DeleteMyNotes (Delete)
+@app.delete("/delete_notes")
+@auth.login_required
+def delete_notes():
+    if request.is_json:
+        payload = request.get_json()
+        username = payload["username"]
+        teamname = payload["teamname"]
+        if _delete_notes(username + teamname):
+            return {"Message": "Deleted All Notes"}
+        else:
+            return {"Message": "No Notes To Delete"}
+    else:
+        return {"error": "Request must be JSON"}, 415
+
 #-DeleteUser
+@app.delete("/delete_user")
+@auth.login_required
+def delete_user():
+    if request.is_json:
+        payload = request.get_json()
+        username = payload["username"]
+        teamname = payload["teamname"]
+        if _delete_user(username, teamname):
+            return {"Message": f"Deleted {username} {teamname}"}, 201
+        else:
+            return {"Message": "User could not be found"}, 200
+    else:
+        return {"error": "Request must be JSON"}, 415
