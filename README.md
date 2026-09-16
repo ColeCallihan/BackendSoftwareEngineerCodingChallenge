@@ -57,3 +57,4 @@ Add: JSON Web Tokens to protect data in transit further
 Multiple notes per user, saved as something other than just a raw string
 Add: logic to determine if constructive vs destructive save is needed
 Add: Encryption for saving the user_data file when at rest
+Save users as something better than a pipe-separated file (probably a proper database)
