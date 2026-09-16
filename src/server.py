@@ -9,10 +9,11 @@ import json
 app: Flask = Flask(__name__)
 
 # Would Make environment Variable
-data_path: Path = Path("data/")
+local_storage: Path = Path("data/")
 
 # Determine if user data already exists, if not, create it
-users_file: Path = data_path / "users_file.json"
+users_file: Path = local_storage / "users_file.json"
+data_file: Path = local_storage / "user_data.json"
 
 try:
     #using "with open" ensures file safety
@@ -23,13 +24,16 @@ try:
 except FileExistsError:
     print("User File already exists")
 
+try:
+    #using "with open" ensures file safety
+    with open(data_file, "x") as file:
+        dummy_dict: dict = {"ExampleNameExampleTeam": ["A possible Note"]}
+        json.dump(dummy_dict, file, indent=4)
+        print("Creating dummy data file")
+except FileExistsError:
+    print("Data File already exists")
 
 auth = HTTPTokenAuth(scheme='Bearer')
-
-user_tokens = {
-    "secret-token-123": "john_doe",
-    "super-secret-456": "jane_smith"
-}
 
 @auth.verify_token
 def verify_token(token):
@@ -40,7 +44,7 @@ def verify_token(token):
         all_tokens.append(user.token)
 
     if token in all_tokens:
-        return user_tokens[token] # Returns the user identity if valid
+        return token # Returns the token if valid
     return None
 
 # Private methods
@@ -81,6 +85,36 @@ def _save_a_user(username: str, teamname: str) -> User:
         file.write(f"|{new_user.model_dump_json()}")
     return new_user
 
+def _save_note(note: str, user_team:str) -> bool:
+    # first, read in user data
+    user_data_dict: dict
+
+    with open(data_file, "r") as file:
+        user_data_dict = json.load(file)
+
+    if user_team in user_data_dict:
+        user_data_dict[user_team].append(note)
+    else:
+        # if user already exists, create list
+        user_data_dict[user_team] = [note]
+
+    # save dict back to file
+    with open(data_file, "w") as file:
+        json.dump(user_data_dict, file, indent=4)
+    return True
+
+def _get_notes(user_team: str) -> list[str] | None:
+    # first, read in user data
+    user_data_dict: dict
+
+    with open(data_file, "r") as file:
+        user_data_dict = json.load(file)
+
+    # See if user exists
+    if user_team in user_data_dict:
+        return user_data_dict[user_team]
+    # if not, return nothing
+
 #-SignUp
 @app.post("/signup")
 def sign_up():
@@ -110,11 +144,28 @@ def save_notes():
         username = payload["username"]
         teamname = payload["teamname"]
         note: str = payload["notes"]
-        print(note)
-        return jsonify(note), 201
+        if _save_note(note, username + teamname):
+            return jsonify(note), 201
+        else:
+            return {"Message": "Unable to save note"}, 200
     else:
         return {"error": "Request must be JSON"}, 415
 
 #-GetMyNotes (Read)
+@app.get("/get_notes")
+@auth.login_required
+def read_notes():
+    if request.is_json:
+        payload = request.get_json()
+        username = payload["username"]
+        teamname = payload["teamname"]
+        notes: list[str] = _get_notes(username+teamname)
+        if notes:
+            return notes
+        else:
+            return {"Message": "No notes saved"}
+    else:
+        return {"error": "Request must be JSON"}, 415
+
 #-DeleteMyNotes (Delete)
 #-DeleteUser

@@ -37,11 +37,29 @@ if response:
         print("Response Text:", response.json())
 
         # step 2, try to save our notes with our new token
-        print("\n----- Executing POST Save Notes Endpoint -----")
-        headers = {"Authorization": my_token}
+        print(f"\n----- Executing POST Save Notes Endpoint using {my_token} -----")
+        headers = {"Authorization": f"Bearer {my_token}"}
         payload: dict = {"username": "JohnSmith", "teamname": "TeamOne", "notes": "Saving this note for later..."}
         api_url: str = "http://127.0.0.1:5000/save_notes"
         response: requests.Response = requests.post(api_url, headers=headers, json=payload)
+        if response:
+            print(f"Status Code: {status_code}, {APIStatus(status_code).name}, {HTTPStatus(status_code).description})")
+            print("Response Text:", response.json())
+
+        # step 3, try to save another note with new token
+        print(f"\n----- Executing POST Save Notes 2 Endpoint using {my_token} -----")
+        payload: dict = {"username": "JohnSmith", "teamname": "TeamOne", "notes": "Did I leave my fridge open?..."}
+        response: requests.Response = requests.post(api_url, headers=headers, json=payload)
+        if response:
+            print(f"Status Code: {status_code}, {APIStatus(status_code).name}, {HTTPStatus(status_code).description})")
+            print("Response Text:", response.json())
+
+        # step 4, try to read my own notes
+        print("\n----- Executing GET my notes Endpoint -----")
+        api_url: str = "http://127.0.0.1:5000/get_notes"
+        payload: dict = {"username": "JohnSmith", "teamname": "TeamOne"}
+        response: requests.Response = requests.get(api_url, json=payload, headers=headers)
+        status_code: int = response.status_code
         print(f"Status Code: {status_code}, {APIStatus(status_code).name}, {HTTPStatus(status_code).description})")
         print("Response Text:", response.json())
 else:
